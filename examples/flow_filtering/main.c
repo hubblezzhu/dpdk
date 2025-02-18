@@ -31,7 +31,7 @@
 static volatile bool force_quit;
 
 static uint16_t port_id;
-static uint16_t nr_queues = 5;
+static uint16_t nr_queues = 32;
 static uint8_t selected_queue = 1;
 struct rte_mempool *mbuf_pool;
 struct rte_flow *flow;
@@ -266,7 +266,18 @@ main(int argc, char **argv)
 	/* >8 End of Initializing the ports using user defined init_port(). */
 
 	/* Create flow for send packet with. 8< */
-	flow = generate_ipv4_flow(port_id, selected_queue,
+	// flow = generate_ipv4_flow(port_id, selected_queue,
+	// 			SRC_IP, EMPTY_MASK,
+	// 			DEST_IP, FULL_MASK, &error);
+	// /* >8 End of create flow and the flow rule. */
+	// if (!flow) {
+	// 	printf("Flow can't be created %d message: %s\n",
+	// 		error.type,
+	// 		error.message ? error.message : "(no stated reason)");
+	// 	rte_exit(EXIT_FAILURE, "error in creating flow");
+	// }
+
+	flow = generate_bgp_flow_src(port_id, 5,
 				SRC_IP, EMPTY_MASK,
 				DEST_IP, FULL_MASK, &error);
 	/* >8 End of create flow and the flow rule. */
@@ -276,7 +287,29 @@ main(int argc, char **argv)
 			error.message ? error.message : "(no stated reason)");
 		rte_exit(EXIT_FAILURE, "error in creating flow");
 	}
-	/* >8 End of creating flow for send packet with. */
+
+
+	flow = generate_bgp_flow_dst(port_id, 6,
+				SRC_IP, EMPTY_MASK,
+				DEST_IP, FULL_MASK, &error);
+	/* >8 End of create flow and the flow rule. */
+	if (!flow) {
+		printf("Flow can't be created %d message: %s\n",
+			error.type,
+			error.message ? error.message : "(no stated reason)");
+		rte_exit(EXIT_FAILURE, "error in creating flow");
+	}
+
+	flow = generate_vxlan_flow(port_id, 7,
+				SRC_IP, EMPTY_MASK,
+				DEST_IP, FULL_MASK, &error);
+	/* >8 End of create flow and the flow rule. */
+	if (!flow) {
+		printf("Flow can't be created %d message: %s\n",
+			error.type,
+			error.message ? error.message : "(no stated reason)");
+		rte_exit(EXIT_FAILURE, "error in creating flow");
+	}
 
 	/* Launching main_loop(). 8< */
 	ret = main_loop();

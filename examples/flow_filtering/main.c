@@ -96,6 +96,8 @@ print_tuple(struct rte_mbuf *m, uint16_t queue)
 			printf("Proto: UDP, Port src: %d, Port dst: %d",
 				rte_be_to_cpu_16(udp_hdr->src_port),
 				rte_be_to_cpu_16(udp_hdr->dst_port));
+		} else {
+			printf("Not TCP or UDP protocol, ");
 		}
 
 		printf(" - queue=0x%x",
@@ -201,15 +203,15 @@ init_port(void)
 	uint16_t i;
 	/* Ethernet port configured with default settings. 8< */
 	struct rte_eth_conf port_conf = {
-		.rxmode = {
-			.mq_mode = RTE_ETH_MQ_RX_RSS,
-		},
-		.rx_adv_conf = {
-			.rss_conf = {
-				.rss_key = NULL,
-				.rss_hf = RTE_ETH_RSS_PROTO_MASK,
-			}
-		},
+		// .rxmode = {
+		// 	.mq_mode = RTE_ETH_MQ_RX_RSS,
+		// },
+		// .rx_adv_conf = {
+		// 	.rss_conf = {
+		// 		.rss_key = NULL,
+		// 		.rss_hf = RTE_ETH_RSS_PROTO_MASK,
+		// 	}
+		// },
 
 		.txmode = {
 			.offloads =

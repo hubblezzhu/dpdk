@@ -31,7 +31,7 @@
 static volatile bool force_quit;
 
 static uint16_t port_id;
-static uint16_t nr_queues = 32;
+static uint16_t nr_queues = 8;
 static uint8_t selected_queue = 1;
 struct rte_mempool *mbuf_pool;
 struct rte_flow *flow;
@@ -42,6 +42,7 @@ struct rte_flow *flow;
 #define EMPTY_MASK 0x0 /* empty mask */
 
 #include "flow_blocks.c"
+#include "bgp_flows.c"
 
 static inline void
 print_ether_addr(const char *what, struct rte_ether_addr *eth_addr)
@@ -300,16 +301,16 @@ main(int argc, char **argv)
 		rte_exit(EXIT_FAILURE, "error in creating flow");
 	}
 
-	flow = generate_vxlan_flow(port_id, 7,
-				SRC_IP, EMPTY_MASK,
-				DEST_IP, FULL_MASK, &error);
-	/* >8 End of create flow and the flow rule. */
-	if (!flow) {
-		printf("Flow can't be created %d message: %s\n",
-			error.type,
-			error.message ? error.message : "(no stated reason)");
-		rte_exit(EXIT_FAILURE, "error in creating flow");
-	}
+	// flow = generate_vxlan_flow(port_id, 7,
+	// 			SRC_IP, EMPTY_MASK,
+	//			DEST_IP, FULL_MASK, &error);
+	// /* >8 End of create flow and the flow rule. */
+	// if (!flow) {
+	// 	printf("Flow can't be created %d message: %s\n",
+	// 		error.type,
+	// 		error.message ? error.message : "(no stated reason)");
+	//	rte_exit(EXIT_FAILURE, "error in creating flow");
+	// }
 
 	/* Launching main_loop(). 8< */
 	ret = main_loop();

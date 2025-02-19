@@ -52,6 +52,68 @@ print_ether_addr(const char *what, struct rte_ether_addr *eth_addr)
 	printf("%s%s", what, buf);
 }
 
+
+static inline void
+print_tuple(struct rte_mbuf *m, uint16_t queue)
+{
+	struct rte_ether_hdr *eth_hdr;
+	struct rte_ipv4_hdr *ipv4_hdr;
+	struct rte_tcp_hdr *tcp_hdr;
+	struct rte_udp_hdr *udp_hdr;
+	uint16_t eth_type;
+
+	eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
+	eth_type = rte_be_to_cpu_16(eth_hdr->ether_type);
+
+	if (eth_type == RTE_ETHER_TYPE_IPV4) {
+		ipv4_hdr = rte_pktmbuf_mtod_offset(m, struct rte_ipv4_hdr *,
+				sizeof(struct rte_ether_hdr));
+		
+		printf("IP src: %d.%d.%d.%d ", 
+			(ipv4_hdr->src_addr >> 24) & 0xff,
+			(ipv4_hdr->src_addr >> 16) & 0xff, 
+			(ipv4_hdr->src_addr >> 8) & 0xff,
+			ipv4_hdr->src_addr & 0xff);
+			
+		printf("IP dst: %d.%d.%d.%d ",
+			(ipv4_hdr->dst_addr >> 24) & 0xff,
+			(ipv4_hdr->dst_addr >> 16) & 0xff,
+			(ipv4_hdr->dst_addr >> 8) & 0xff,
+			ipv4_hdr->dst_addr & 0xff);
+
+		if (ipv4_hdr->next_proto_id == IPPROTO_TCP) {
+			tcp_hdr = rte_pktmbuf_mtod_offset(m, struct rte_tcp_hdr *,
+					sizeof(struct rte_ether_hdr) + sizeof(struct rte_ipv4_hdr));
+			printf("Proto: TCP, Port src: %d, Port dst: %d",
+				rte_be_to_cpu_16(tcp_hdr->src_port),
+				rte_be_to_cpu_16(tcp_hdr->dst_port));
+		} else if (ipv4_hdr->next_proto_id == IPPROTO_UDP) {
+			udp_hdr = rte_pktmbuf_mtod_offset(m, struct rte_udp_hdr *,
+					sizeof(struct rte_ether_hdr) + sizeof(struct rte_ipv4_hdr));
+			printf("Proto: UDP, Port src: %d, Port dst: %d",
+				rte_be_to_cpu_16(udp_hdr->src_port),
+				rte_be_to_cpu_16(udp_hdr->dst_port));
+		}
+
+		printf(" - queue=0x%x",
+							(unsigned int)queue);
+		printf("\n");
+	} else {
+		printf("Not ipv4 protocol, ");
+
+		eth_hdr = rte_pktmbuf_mtod(m,
+							struct rte_ether_hdr *);
+					print_ether_addr("src=",
+							&eth_hdr->src_addr);
+					print_ether_addr(" - dst=",
+							&eth_hdr->dst_addr);
+					printf(" - queue=0x%x",
+							(unsigned int)queue);
+					printf("\n");
+	}
+}
+
+
 /* Main_loop for flow filtering. 8< */
 static int
 main_loop(void)
@@ -73,15 +135,17 @@ main_loop(void)
 				for (j = 0; j < nb_rx; j++) {
 					struct rte_mbuf *m = mbufs[j];
 
-					eth_hdr = rte_pktmbuf_mtod(m,
-							struct rte_ether_hdr *);
-					print_ether_addr("src=",
-							&eth_hdr->src_addr);
-					print_ether_addr(" - dst=",
-							&eth_hdr->dst_addr);
-					printf(" - queue=0x%x",
-							(unsigned int)i);
-					printf("\n");
+					// eth_hdr = rte_pktmbuf_mtod(m,
+					// 		struct rte_ether_hdr *);
+					// print_ether_addr("src=",
+					// 		&eth_hdr->src_addr);
+					// print_ether_addr(" - dst=",
+					// 		&eth_hdr->dst_addr);
+					// printf(" - queue=0x%x",
+					// 		(unsigned int)i);
+					// printf("\n");
+
+					print_tuple(m, i);
 
 					rte_pktmbuf_free(m);
 				}

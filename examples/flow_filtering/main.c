@@ -70,16 +70,16 @@ print_tuple(struct rte_mbuf *m, uint16_t queue)
 				sizeof(struct rte_ether_hdr));
 		
 		printf("IP src: %d.%d.%d.%d ", 
-			(ipv4_hdr->src_addr >> 24) & 0xff,
-			(ipv4_hdr->src_addr >> 16) & 0xff, 
+			(ipv4_hdr->src_addr) & 0xff,
 			(ipv4_hdr->src_addr >> 8) & 0xff,
-			ipv4_hdr->src_addr & 0xff);
+			(ipv4_hdr->src_addr >> 16) & 0xff,
+			(ipv4_hdr->src_addr >> 24) & 0xff);
 			
 		printf("IP dst: %d.%d.%d.%d ",
-			(ipv4_hdr->dst_addr >> 24) & 0xff,
-			(ipv4_hdr->dst_addr >> 16) & 0xff,
+			(ipv4_hdr->dst_addr) & 0xff,
 			(ipv4_hdr->dst_addr >> 8) & 0xff,
-			ipv4_hdr->dst_addr & 0xff);
+			(ipv4_hdr->dst_addr >> 16) & 0xff,
+			(ipv4_hdr->dst_addr >> 24) & 0xff);
 
 		if (ipv4_hdr->next_proto_id == IPPROTO_TCP) {
 			tcp_hdr = rte_pktmbuf_mtod_offset(m, struct rte_tcp_hdr *,
@@ -198,6 +198,16 @@ init_port(void)
 	uint16_t i;
 	/* Ethernet port configured with default settings. 8< */
 	struct rte_eth_conf port_conf = {
+		.rxmode = {
+			.mq_mode = RTE_ETH_MQ_RX_RSS,
+		},
+		.rx_adv_conf = {
+			.rss_conf = {
+				.rss_key = NULL,
+				.rss_hf = RTE_ETH_RSS_PROTO_MASK,
+			}
+		},
+		
 		.txmode = {
 			.offloads =
 				RTE_ETH_TX_OFFLOAD_VLAN_INSERT |

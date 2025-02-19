@@ -32,6 +32,8 @@ static volatile bool force_quit;
 
 static uint16_t port_id;
 static uint16_t nr_queues = 8;
+static uint16_t bgp_queue = nr_queues - 1;
+
 static uint8_t selected_queue = 1;
 struct rte_mempool *mbuf_pool;
 struct rte_flow *flow;
@@ -43,7 +45,8 @@ struct rte_flow *flow;
 
 #include "flow_blocks.c"
 #include "bgp_flows.c"
-
+#include "tcp_flows.c"
+#include "udp_flows.c"
 static inline void
 print_ether_addr(const char *what, struct rte_ether_addr *eth_addr)
 {
@@ -207,7 +210,7 @@ init_port(void)
 				.rss_hf = RTE_ETH_RSS_PROTO_MASK,
 			}
 		},
-		
+
 		.txmode = {
 			.offloads =
 				RTE_ETH_TX_OFFLOAD_VLAN_INSERT |
@@ -352,7 +355,7 @@ main(int argc, char **argv)
 	// 	rte_exit(EXIT_FAILURE, "error in creating flow");
 	// }
 
-	flow = generate_bgp_flow_src(port_id, 5,
+	flow = generate_bgp_flow_src(port_id, bgp_queue,
 				SRC_IP, EMPTY_MASK,
 				DEST_IP, FULL_MASK, &error);
 	/* >8 End of create flow and the flow rule. */
@@ -364,7 +367,29 @@ main(int argc, char **argv)
 	}
 
 
-	flow = generate_bgp_flow_dst(port_id, 6,
+	flow = generate_bgp_flow_dst(port_id, bgp_queue,
+				SRC_IP, EMPTY_MASK,
+				DEST_IP, FULL_MASK, &error);
+	/* >8 End of create flow and the flow rule. */
+	if (!flow) {
+		printf("Flow can't be created %d message: %s\n",
+			error.type,
+			error.message ? error.message : "(no stated reason)");
+		rte_exit(EXIT_FAILURE, "error in creating flow");
+	}
+
+	flow = generate_tcp_flow(port_id, nr_queues,
+				SRC_IP, EMPTY_MASK,
+				DEST_IP, FULL_MASK, &error);
+	/* >8 End of create flow and the flow rule. */
+	if (!flow) {
+		printf("Flow can't be created %d message: %s\n",
+			error.type,
+			error.message ? error.message : "(no stated reason)");
+		rte_exit(EXIT_FAILURE, "error in creating flow");
+	}
+
+	flow = generate_udp_flow(port_id, nr_queues,
 				SRC_IP, EMPTY_MASK,
 				DEST_IP, FULL_MASK, &error);
 	/* >8 End of create flow and the flow rule. */

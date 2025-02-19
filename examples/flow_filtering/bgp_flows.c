@@ -60,7 +60,10 @@ generate_bgp_flow_src(uint16_t port_id, uint16_t rx_q,
 
 	/* Set the rule attribute, only ingress packets will be checked. 8< */
 	memset(&attr, 0, sizeof(struct rte_flow_attr));
+    attr.group = 0;
+    attr.priority = 0;
 	attr.ingress = 1;
+
 	/* >8 End of setting the rule attribute. */
 
 	/*
